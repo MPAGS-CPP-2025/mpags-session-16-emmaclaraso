@@ -23,6 +23,7 @@ TEST(CommandLine, VersionFoundCorrectly)
     EXPECT_TRUE(settings.versionRequested);
 }
 
+
 TEST(CommandLine, EncryptModeActivated)
 {
     ProgramSettings settings;
@@ -61,6 +62,16 @@ TEST(CommandLine, KeyEnteredAndSpecified)
     EXPECT_TRUE(res);
     EXPECT_EQ(settings.cipherKey.size(), 1);
     EXPECT_EQ(settings.cipherKey[0], "4");
+}
+
+TEST(CommandLine, MultiCipherInvalid)
+{
+    ProgramSettings settings;
+    const std::vector<std::string> cmdLine{"mpags-cipher", "--multi-cipher",
+                                           "x"};
+    const bool res{processCommandLine(cmdLine, settings)};
+
+    EXPECT_FALSE(res);
 }
 
 TEST(CommandLine, InputFileWithoutArg)
