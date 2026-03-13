@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 int main(int argc, char* argv[])
 {
@@ -65,7 +66,7 @@ int main(int argc, char* argv[])
 
     // Initialise variables
     char inputChar{'x'};
-    std::string inputText;
+    std::string outputText;
 
     // Read in user input from stdin/file
     if (!settings.inputFile.empty()) {
@@ -79,23 +80,33 @@ int main(int argc, char* argv[])
 
         // Loop over each character from the file
         while (inputStream >> inputChar) {
-            inputText += transformChar(inputChar);
+            outputText += transformChar(inputChar);
         }
 
     } else {
         // Loop over each character from user input
         // (until Return then CTRL-D (EOF) pressed)
         while (std::cin >> inputChar) {
-            inputText += transformChar(inputChar);
+            outputText += transformChar(inputChar);
         }
     }
 
-    std::string outputText;
+    std::vector<std::unique_ptr<Cipher>> ciphers;
+    std::size_t nCiphers{settings.cipherType.size()};
+    ciphers.reserve(nCiphers);
+    for (std::size_t cipher{0}; cipher < nCiphers; ++cipher) {
+        ciphers.push_back(CipherFactory::makeCipher(
+            settings.cipherType[cipher], settings.cipherKey[cipher]));
+    }
 
-    auto cipher = CipherFactory::makeCipher(settings.cipherType[0],
-                                         settings.cipherKey[0]);
+    if (settings.cipherMode == CipherMode::Decrypt) {
+        std::reverse(ciphers.begin(), ciphers.end());
+    }
 
-    outputText = cipher->applyCipher(inputText, settings.cipherMode);
+    for (const auto& cipher : ciphers) {
+        outputText = cipher->applyCipher(outputText, settings.cipherMode);
+    }
+
 
     // Output the encrypted/decrypted text to stdout/file
     if (!settings.outputFile.empty()) {
